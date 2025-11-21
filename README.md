@@ -1,25 +1,80 @@
-# E-commerce Automation Tests (Playwright)
+E-commerce Automation Tests (Playwright)
+Overview
 
-## Overview
-This project contains end-to-end UI automation tests for a sample e-commerce site using **Playwright**.  
+This project contains end-to-end UI automation tests for a sample e-commerce site using Playwright.
 Tests cover:
 
-- User login (valid & invalid)
-- Add to cart functionality
-- Checkout (positive & negative scenarios)
-- HTML test reporting
+User login (valid & invalid)
+Add to cart functionality
+Checkout (positive & negative scenarios)
 
-## Framework Choice
-We used **Playwright** because:
+HTML test reporting
 
-- Supports UI and API automation
-- Fast and reliable
-- Cross-browser and mobile testing support
-- Built-in reporting, screenshots, and tracing
+Cross-browser testing (Chromium, Firefox, WebKit)
 
-## Setup Instructions
+Screenshots & video capture on failure
 
-### 1. Clone Repository
-```bash
+Framework Choice
+
+We used Playwright because:
+
+Supports UI and API automation
+
+Fast and reliable
+
+Cross-browser and mobile testing support
+
+Built-in reporting, screenshots, and tracing
+
+Project Structure
+e-commerceautomationproject/
+├─ pages/               # Page Object Model classes
+│  ├─ inventoryPage.js
+│  ├─ checkoutPage.js
+│  └─ loginPage.js
+├─ tests/               # Playwright test specs
+│  ├─ login.spec.js
+│  ├─ addcard.spec.js
+│  └─ checkout.spec.js
+├─ playwright.config.js # Playwright configuration
+├─ package.json
+└─ .github/workflows/  # CI/CD pipeline for GitHub Actions
+
+Setup Instructions
+1. Clone Repository
 git clone https://github.com/Himayatu99/e-commerceautomationproject.git
-cd ecommerce-automation
+cd e-commerceautomationproject
+
+2. Install Dependencies
+npm install
+npx playwright install
+
+3. Run Tests Locally
+npx playwright test            # Run all tests
+npx playwright test --headed   # Run tests with browser UI
+npx playwright test --project=firefox  # Run tests in Firefox
+npx playwright show-report     # Open HTML report
+
+4. Configuration
+
+Base URL: Set in playwright.config.js
+
+Browsers: Chromium, Firefox, WebKit
+
+Retries: Configured for CI
+
+Reports: HTML reports saved in playwright-report/
+
+CI/CD with GitHub Actions
+
+Key Features in CI:
+
+Runs tests on every push and pull request
+
+Executes across all browsers
+
+Generates HTML report
+
+Captures screenshots, videos, and traces for failed tests
+
+Artifacts are uploaded for debugging
