@@ -1,68 +1,64 @@
 import { test, expect } from '@playwright/test';
+import { InventoryPage } from '../pages/inventoryPage';
+import { CheckoutPage } from '../pages/checkoutPage';
 
 test.describe('Checkout Flow Tests', () => {
-    test.beforeEach(async ({ page }) => {
-        // Login steps
-        await page.goto('/');
-        await page.locator('[data-test="username"]').fill('standard_user');
-        await page.locator('[data-test="password"]').fill('secret_sauce');
-        await page.locator('[data-test="login-button"]').click();
+  let inventoryPage;
+  let checkoutPage;
 
-        // Verify login success
-        await expect(page).toHaveURL(/inventory/);
-    });
+  test.beforeEach(async ({ page }) => {
+    // Login
+    await page.goto('/');
+    await page.locator('[data-test="username"]').fill('standard_user');
+    await page.locator('[data-test="password"]').fill('secret_sauce');
+    await page.locator('[data-test="login-button"]').click();
+    await expect(page).toHaveURL(/inventory/);
 
-    // Positive Test – valid checkout
-    test('User can successfully complete checkout with valid details', async ({ page }) => {
-        //Add items to cart
-        await page.locator('[data-test="add-to-cart-sauce-labs-backpack"]').click();
-        await page.locator('[data-test="add-to-cart-sauce-labs-bike-light"]').click();
+    // Initialize POM
+    inventoryPage = new InventoryPage(page);
+    checkoutPage = new CheckoutPage(page);
+  });
 
-        // Step 3: Go to cart
-        await page.locator('[data-test="shopping-cart-link"]').click();
-        await expect(page).toHaveURL(/cart/);
+  // Positive Test – valid checkout
+  test('User can successfully complete checkout with valid details', async ({ page }) => {
+    // Add items to cart
+    await inventoryPage.addItemByTestId('sauce-labs-backpack');
+    await inventoryPage.addItemByTestId('sauce-labs-bike-light');
 
-        // Step 4: Checkout
-        await page.locator('[data-test="checkout"]').click();
-        await expect(page).toHaveURL(/checkout-step-one/);
+    // Go to cart and start checkout
+    await inventoryPage.goToCart();
+    await checkoutPage.startCheckout();
 
-        // Step 5: Enter valid checkout info
-        await page.locator('[data-test="firstName"]').fill('John');
-        await page.locator('[data-test="lastName"]').fill('Doe');
-        await page.locator('[data-test="postalCode"]').fill('12345');
-        await page.locator('[data-test="continue"]').click();
-        await expect(page).toHaveURL(/checkout-step-two/);
+    // Enter checkout details
+    await checkoutPage.enterCheckoutInfo('John', 'Doe', '12345');
 
-        // Step 6: Finish order
-        await page.locator('[data-test="finish"]').click();
+    // Continue to overview
+    await checkoutPage.continueCheckout();
+    await expect(page).toHaveURL(/checkout-step-two/); // URL check only for positive flow
 
-        // Step 7: Verify order success
-        await expect(page.locator('[data-test="complete-header"]')).toHaveText('Thank you for your order!');
-    });
+    // Finish order
+    await checkoutPage.finishCheckout();
 
-    // Negative Test – missing required information
-    test('Checkout fails when required information is missing', async ({ page }) => {
+    // Verify success
+    await expect(page.locator('[data-test="complete-header"]')).toHaveText('Thank you for your order!');
+  });
 
-        // Add an item to cart
-        await page.locator('[data-test="add-to-cart-sauce-labs-backpack"]').click();
+  // Negative Test – missing required information
+  test('Checkout fails when required information is missing', async ({ page }) => {
+    // Add item to cart
+    await inventoryPage.addItemByTestId('sauce-labs-backpack');
 
-        //Go to cart
-        await page.locator('[data-test="shopping-cart-link"]').click();
-        await expect(page).toHaveURL(/cart/);
+    // Go to cart and start checkout
+    await inventoryPage.goToCart();
+    await checkoutPage.startCheckout();
 
-        //Click checkout
-        await page.locator('[data-test="checkout"]').click();
-        await expect(page).toHaveURL(/checkout-step-one/);
+    // Leave fields empty
+    await checkoutPage.enterCheckoutInfo('', '', '');
 
-        //Leave required fields empty and click continue
-        await page.locator('[data-test="firstName"]').fill('');
-        await page.locator('[data-test="lastName"]').fill('');
-        await page.locator('[data-test="postalCode"]').fill('');
-        await page.locator('[data-test="continue"]').click();
+    // Click continue (no URL navigation expected)
+    await checkoutPage.continueCheckout();
 
-        //Verify error message
-        const errorMessage = page.locator('[data-test="error"]');
-        await expect(errorMessage).toHaveText('Error: First Name is required');
-    });
-
+    // Verify error message
+    await expect(checkoutPage.getErrorMessage()).toHaveText('Error: First Name is required');
+  });
 });

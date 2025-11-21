@@ -1,27 +1,21 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
+import { LoginPage } from '../pages/loginPage';
 
-// Invalid Login Test
-test('User cannot login with invalid credentials', async ({ page }) => {
-    await page.goto('/');
-    await page.locator('[data-test="username"]').click();
-    await page.locator('[data-test="username"]').fill('standard_user');
-    await page.locator('[data-test="password"]').click();
-    await page.locator('[data-test="password"]').fill('wrongPassword123');
-    await page.locator('[data-test="login-button"]').click();
+test.describe('Login Tests', () => {
+  let loginPage;
 
-    await expect(page.locator('[data-test="error"]'))
-        .toHaveText('Epic sadface: Username and password do not match any user in this service');
-});
+  test.beforeEach(async ({ page }) => {
+    loginPage = new LoginPage(page);
+    await loginPage.goto();
+  });
 
-// Valid Login Test
-test('User can login with valid credentials', async ({ page }) => {
-    await page.goto('/');
-    await page.locator('[data-test="username"]').click();
-    await page.locator('[data-test="username"]').fill('standard_user');
-    await page.locator('[data-test="password"]').click();
-    await page.locator('[data-test="password"]').fill('secret_sauce');
-    await page.locator('[data-test="login-button"]').click();
+  test('User cannot login with invalid credentials', async ({ page }) => {
+    await loginPage.login('standard_user', 'wrongPassword123');
+    await loginPage.expectError('Epic sadface: Username and password do not match any user in this service');
+  });
 
-    // Assertion: Successful login leads to products page
-    await expect(page.locator('.title')).toHaveText('Products');
+  test('User can login with valid credentials', async ({ page }) => {
+    await loginPage.login('standard_user', 'secret_sauce');
+    await loginPage.expectTitle('Products'); 
+  });
 });
